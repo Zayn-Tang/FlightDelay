@@ -6,6 +6,7 @@ from datetime import datetime
 from utils.logger import get_logger
 import os
 from model.transformer import transformer
+from utils.metrics import mae_torch, rmse_torch
 
 def get_log_dir(config):
     current_time = datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -303,16 +304,19 @@ class Trainer:
         for idx, (X, TE, Y) in enumerate(self.test_loader):
             X = X.to(self.device)
             TE = TE.to(self.device)
+            Y = Y.to(self.device)
             X = torch.concat([self.scaler.transform(X[..., :2]), X[..., -1:]], dim=-1)
 
             self.optim.zero_grad()
             with torch.no_grad():
                 pred = self.model(X, [self.od, self.adj], TE)
             pred = self.scaler.inverse_transform(pred)
-            mae , rmse, r2 = test_error(pred, Y)
+            # mae , rmse, r2 = test_error(pred, Y[...,:-1])
+            mae = mae_torch(pred, Y[..., :-1])
+            rmse = rmse_torch(pred, Y[..., :-1])
             mae_list.append(mae.item())
             rmse_list.append(rmse.item())
-            r2_list.append(r2.item())
+            # r2_list.append(r2.item())
 
-        self.logger.info(f"Test Error: MAE {np.mean(mae_list)},  RMSE {np.mean(rmse_list)}, R2 {np.mean(r2_list)}")
+        self.logger.info(f"Test Error: MAE {np.mean(mae_list)},  RMSE {np.mean(rmse_list)}")
         self.logger.info('**************Current best model saved to {}'.format(self.best_path))

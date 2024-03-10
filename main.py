@@ -33,7 +33,11 @@ if __name__=='__main__':
     seed_init(args.seed)
 
     trainer = Trainer(args, device)
-    trainer.train()
+    if args.running_mode == "train":
+        trainer.train()
+        trainer.test()
+    elif args.running_mode == "test":
+        trainer.test()
 
 
 
