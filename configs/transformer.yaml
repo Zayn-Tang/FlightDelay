@@ -2,22 +2,22 @@
 seed: 31
 device: cuda
 debug: False 
-running_mode: train #  train test finetune
+running_mode: test #  train test finetune
 
 ## train
 num_hist: 12
 num_pred: 12
-early_stop_patience: 10
+early_stop_patience: 5
 epochs: 100
 lr_init: 0.001
-load_model: False
-best_path: None   # for testing dataset.
+load_model: True
+best_path: logs\udata\20240310-175024\best_model.pth   # for testing dataset.
 
 ## model
 hidden_dim: 16
 num_heads: 8
 batch_size: 64
-block_layers: 2
+block_layers: 1
 input_dim: 3
 output_dim: 2
 

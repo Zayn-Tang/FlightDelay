@@ -14,6 +14,25 @@ def get_log_dir(config):
     return log_dir 
 
 
+def test_error(y_predict, y_true):
+    """
+    Calculates MAE, RMSE, R2.
+    :param y_test:
+    :param y_predict.
+    :return:
+    """
+    err = y_predict - y_true
+    MAE = np.mean(np.abs(err[~np.isnan(err)]))
+    
+    s_err = err**2
+    RMSE = np.sqrt(np.mean((s_err[~np.isnan(s_err)])))
+    
+    test_mean = np.mean((y_true[~np.isnan(y_true)]))
+    m_err = (y_true - test_mean)**2
+    R2 = 1 - np.sum(s_err[~np.isnan(s_err)])/np.sum(m_err[~np.isnan(m_err)])
+    
+    return MAE, RMSE, R2
+
 def normalize_data(data, scalar_type='Standard'):
     scalar = None
     if scalar_type == 'MinMax01':
@@ -107,11 +126,12 @@ class Trainer:
         self.model = transformer(args).to(device)
         self.loss_func = torch.nn.MSELoss()
         self.optim = torch.optim.Adam(self.model.parameters(), lr=args.lr_init, weight_decay=1e-3)
-        self.sched = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optim, factor=0.1, patience=3)
+        self.sched = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optim, factor=0.1, patience=2)
 
+        print(self.model)
+        self.logger.info(self.model)
 
-
-        if self.args.load_model and self.args.best_path != "None":
+        if self.args.load_model and self.args.best_path != "None" or self.args.running_mode=="test":
             ckp = torch.load(self.args.best_path)
             self.model.load_state_dict(ckp["model"])
             self.optim.load_state_dict(ckp["optimizer"])
@@ -196,9 +216,17 @@ class Trainer:
             TE = TE.to(self.device)
             Y = Y.to(self.device)
 
+            X = torch.concat([self.scaler.transform(X[..., :2]), X[..., -1:]], dim=-1)
+
             self.optim.zero_grad()
             pred = self.model(X, [self.od, self.adj], TE)
+            pred = self.scaler.inverse_transform(pred)
 
+            if self.args.grad_norm:
+                torch.nn.utils.clip_grad_norm_(
+                    self.model.parameters(), 
+                    self.args.max_grad_norm)
+                
             loss = self.loss_func(pred, Y[..., :2])
             # loss.backward(retrain_graph=True)
             loss.backward()
@@ -219,10 +247,13 @@ class Trainer:
             TE = TE.to(self.device)
             Y = Y.to(self.device)
 
+            X = torch.concat([self.scaler.transform(X[..., :2]), X[..., -1:]], dim=-1)
+
             self.optim.zero_grad()
             with torch.no_grad():
                 pred = self.model(X, [self.od, self.adj], TE)
 
+            pred = self.scaler.inverse_transform(pred)
             loss = self.loss_func(pred, Y[..., :2])
             total_loss.append(loss.item())
 
@@ -263,4 +294,25 @@ class Trainer:
         torch.save(save_dict, self.best_path)
 
 
-    
+
+    def test(self):
+        self.model.eval()
+        mae_list = []
+        rmse_list = []
+        r2_list = []
+        for idx, (X, TE, Y) in enumerate(self.test_loader):
+            X = X.to(self.device)
+            TE = TE.to(self.device)
+            X = torch.concat([self.scaler.transform(X[..., :2]), X[..., -1:]], dim=-1)
+
+            self.optim.zero_grad()
+            with torch.no_grad():
+                pred = self.model(X, [self.od, self.adj], TE)
+            pred = self.scaler.inverse_transform(pred)
+            mae , rmse, r2 = test_error(pred, Y)
+            mae_list.append(mae.item())
+            rmse_list.append(rmse.item())
+            r2_list.append(r2.item())
+
+        self.logger.info(f"Test Error: MAE {np.mean(mae_list)},  RMSE {np.mean(rmse_list)}, R2 {np.mean(r2_list)}")
+        self.logger.info('**************Current best model saved to {}'.format(self.best_path))
