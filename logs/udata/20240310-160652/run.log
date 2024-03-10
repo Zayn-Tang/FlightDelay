@@ -1,0 +1,5 @@
+2024-03-10 16:06:52: Running on: cuda
+2024-03-10 16:06:52: Experiment log path in: C:\Users\17301\Desktop\∫Ω∞‡—”ŒÛ‘§≤‚ µ—È\logs\udata\20240310-160652
+2024-03-10 16:06:52: Experiment configs are: Namespace(seed=31, device='cuda', debug=False, running_mode='train', num_hist=12, num_pred=12, early_stop_patience=10, epochs=100, lr_init=0.001, load_model=False, best_path='None', hidden_dim=16, num_heads=8, batch_size=64, block_layers=2, input_dim=3, output_dim=2, dataset='udata', scalar_type='Standard', train_ratio=0.7, valid_ratio=0.2, test_ratio=0.1, log_dir='C:\\Users\\17301\\Desktop\\∫Ω∞‡—”ŒÛ‘§≤‚ µ—È\\logs\\udata\\20240310-160652')
+2024-03-10 16:06:54: udata Dataset Load Finished.
+2024-03-10 16:07:01: Batch: 0,  Train Loss: 91.46831512451172
