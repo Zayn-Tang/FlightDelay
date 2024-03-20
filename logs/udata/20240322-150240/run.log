@@ -1,0 +1,303 @@
+2024-03-22 15:02:40: Running on: cuda
+2024-03-22 15:02:40: Experiment log path in: C:\Users\17301\Desktop\∫Ω∞‡—”ŒÛ‘§≤‚ µ—È\logs\udata\20240322-150240
+2024-03-22 15:02:40: Experiment configs are: Namespace(seed=31, device='cuda', debug=False, running_mode='test', num_hist=12, num_pred=12, early_stop_patience=5, epochs=100, lr_init=0.001, load_model=False, best_path='logs\\udata\\20240320-114934\\best_model.pth', grad_norm=True, max_grad_norm=8, hidden_dim=16, num_heads=8, batch_size=64, block_layers=1, input_dim=3, output_dim=2, dataset='udata', scalar_type='Standard', train_ratio=0.7, valid_ratio=0.2, test_ratio=0.1, cheb_order=3, log_dir='C:\\Users\\17301\\Desktop\\∫Ω∞‡—”ŒÛ‘§≤‚ µ—È\\logs\\udata\\20240322-150240')
+2024-03-22 15:02:42: udata Dataset Load Finished.
+2024-03-22 15:02:44: transformer(
+  (emb1): Linear(in_features=70, out_features=128, bias=True)
+  (layernorm): LayerNorm((128,), eps=1e-05, elementwise_affine=True)
+  (emb2): Linear(in_features=70, out_features=128, bias=True)
+  (STEmbedding): STEmbedding(
+    (FC_se): FC(
+      (convs): ModuleList(
+        (0-1): 2 x conv2d_(
+          (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+          (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (FC_te): FC(
+      (convs): ModuleList(
+        (0): conv2d_(
+          (conv): Conv2d(1, 128, kernel_size=(1, 1), stride=(1, 1))
+          (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (1): conv2d_(
+          (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+          (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (SE_norm): LayerNorm((128,), eps=1e-05, elementwise_affine=True)
+    (TE_norm): LayerNorm((128,), eps=1e-05, elementwise_affine=True)
+  )
+  (STAttBlock_1): ModuleList(
+    (0): STAttBlock(
+      (spatialAttention): spatialAttention(
+        (FC_q): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_k): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_v): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+      )
+      (cheb_conv): ChebConv(
+        (Theta): ParameterList(
+            (0): Parameter containing: [torch.float32 of size 128x128 (cuda:0)]
+            (1): Parameter containing: [torch.float32 of size 128x128 (cuda:0)]
+            (2): Parameter containing: [torch.float32 of size 128x128 (cuda:0)]
+        )
+      )
+      (temporalAttention): temporalAttention(
+        (FC_q): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_k): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_v): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+      )
+      (gatedFusion): gatedFusion(
+        (FC_xs): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_xt): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_h): FC(
+          (convs): ModuleList(
+            (0-1): 2 x conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+      )
+    )
+  )
+  (STAttBlock_2): ModuleList(
+    (0): STAttBlock(
+      (spatialAttention): spatialAttention(
+        (FC_q): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_k): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_v): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+      )
+      (cheb_conv): ChebConv(
+        (Theta): ParameterList(
+            (0): Parameter containing: [torch.float32 of size 128x128 (cuda:0)]
+            (1): Parameter containing: [torch.float32 of size 128x128 (cuda:0)]
+            (2): Parameter containing: [torch.float32 of size 128x128 (cuda:0)]
+        )
+      )
+      (temporalAttention): temporalAttention(
+        (FC_q): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_k): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_v): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+      )
+      (gatedFusion): gatedFusion(
+        (FC_xs): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_xt): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_h): FC(
+          (convs): ModuleList(
+            (0-1): 2 x conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+      )
+    )
+  )
+  (transformAttention): transformAttention(
+    (FC_q): FC(
+      (convs): ModuleList(
+        (0): conv2d_(
+          (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+          (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (FC_k): FC(
+      (convs): ModuleList(
+        (0): conv2d_(
+          (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+          (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (FC_v): FC(
+      (convs): ModuleList(
+        (0): conv2d_(
+          (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+          (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (FC): FC(
+      (convs): ModuleList(
+        (0): conv2d_(
+          (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+          (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+  )
+  (FC_1): FC(
+    (convs): ModuleList(
+      (0): conv2d_(
+        (conv): Conv2d(3, 128, kernel_size=(1, 1), stride=(1, 1))
+        (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (1): conv2d_(
+        (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+        (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+  )
+  (FC_2): FC(
+    (convs): ModuleList(
+      (0): conv2d_(
+        (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+        (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (1): conv2d_(
+        (conv): Conv2d(128, 2, kernel_size=(1, 1), stride=(1, 1))
+        (batch_norm): BatchNorm2d(2, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+  )
+)
+2024-03-22 15:03:01: Test Error: MAE 6.199203196579848,  RMSE 8.679940836216376
+2024-03-22 15:03:01: **************Current best model saved to C:\Users\17301\Desktop\∫Ω∞‡—”ŒÛ‘§≤‚ µ—È\logs\udata\20240322-150240\best_model.pth

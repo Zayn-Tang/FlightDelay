@@ -10,8 +10,10 @@ num_pred: 12
 early_stop_patience: 5
 epochs: 100
 lr_init: 0.001
-load_model: True
-best_path: logs\udata\20240310-175024\best_model.pth   # for testing dataset.
+load_model: False
+best_path: logs\udata\20240320-114934\best_model.pth   # for testing dataset.
+grad_norm: True
+max_grad_norm: 8
 
 ## model
 hidden_dim: 16
@@ -27,4 +29,4 @@ scalar_type: Standard
 train_ratio:  0.7
 valid_ratio: 0.2
 test_ratio: 0.1
-
+cheb_order: 3

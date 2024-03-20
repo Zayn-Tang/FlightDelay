@@ -189,16 +189,39 @@ class gatedFusion(nn.Module):
         del XS, XT, z
         return H
 
+class ChebConv(nn.Module):
+    def __init__(self, cheb_order, cheb_polynomials, hidden_dim):
+        super(ChebConv, self).__init__()
+        self.cheb_order = cheb_order
+        self.cheb_polynomials = cheb_polynomials
+        self.Theta = nn.ParameterList([nn.Parameter(torch.rand(hidden_dim, hidden_dim)*0.1) for i in range(cheb_order)])
+
+    def forward(self, spatial_attention):
+        b, t, n, c = spatial_attention.shape
+        outputs = []
+        for time_step in range(t):
+            sat = spatial_attention[:, time_step]
+            output = torch.zeros(b, n, c).to(spatial_attention.device)
+            for k in range(self.cheb_order):
+                T_k = self.cheb_polynomials[k]
+                T_k_at = T_k.matmul(sat)  # GCN 与注意力相乘
+
+                theta = self.Theta[k]
+                output = output + T_k_at.matmul(theta)
+            outputs.append(output)
+        return F.relu(torch.stack(outputs, dim=1))
 
 class STAttBlock(nn.Module):
-    def __init__(self, K, d, mask=False):
+    def __init__(self, K, d, cheb_order, cheb_poly, mask=False):
         super(STAttBlock, self).__init__()
         self.spatialAttention = spatialAttention(K, d)
+        self.cheb_conv = ChebConv(cheb_order, cheb_poly, K* d)
         self.temporalAttention = temporalAttention(K, d, mask=mask)
         self.gatedFusion = gatedFusion(K * d)
 
     def forward(self, X, STE):
-        HS = self.spatialAttention(X, STE)
+        SA = self.spatialAttention(X, STE)
+        HS = self.cheb_conv(SA)
         HT = self.temporalAttention(X, STE)
         H = self.gatedFusion(HS, HT)
         del HS, HT
@@ -244,7 +267,7 @@ class transformAttention(nn.Module):
 
 
 class transformer(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args, cheb_poly):
         super(transformer, self).__init__()
         layers = args.block_layers
         num_heads = args.num_heads
@@ -257,8 +280,8 @@ class transformer(nn.Module):
         self.emb2 = nn.Linear(args.num_nodes, total_dim)
 
         self.STEmbedding = STEmbedding(total_dim)
-        self.STAttBlock_1 = nn.ModuleList([STAttBlock(num_heads, hidden_dim) for _ in range(layers)])
-        self.STAttBlock_2 = nn.ModuleList([STAttBlock(num_heads, hidden_dim) for _ in range(layers)])
+        self.STAttBlock_1 = nn.ModuleList([STAttBlock(num_heads, hidden_dim, args.cheb_order, cheb_poly) for _ in range(layers)])
+        self.STAttBlock_2 = nn.ModuleList([STAttBlock(num_heads, hidden_dim, args.cheb_order, cheb_poly) for _ in range(layers)])
         self.transformAttention = transformAttention(num_heads, hidden_dim)
         self.FC_1 = FC(input_dims=[args.input_dim, total_dim], units=[total_dim, total_dim], activations=[F.relu, None])
         self.FC_2 = FC(input_dims=[total_dim, total_dim], units=[total_dim, args.output_dim], activations=[F.relu, None])

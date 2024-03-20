@@ -1,0 +1,430 @@
+2024-03-20 11:49:34: Running on: cuda
+2024-03-20 11:49:34: Experiment log path in: C:\Users\17301\Desktop\∫Ω∞‡—”ŒÛ‘§≤‚ µ—È\logs\udata\20240320-114934
+2024-03-20 11:49:34: Experiment configs are: Namespace(seed=31, device='cuda', debug=False, running_mode='train', num_hist=12, num_pred=12, early_stop_patience=5, epochs=100, lr_init=0.001, load_model=False, best_path='logs\\udata\\20240310-175024\\best_model.pth', grad_norm=True, max_grad_norm=8, hidden_dim=16, num_heads=8, batch_size=64, block_layers=1, input_dim=3, output_dim=2, dataset='udata', scalar_type='Standard', train_ratio=0.7, valid_ratio=0.2, test_ratio=0.1, cheb_order=3, log_dir='C:\\Users\\17301\\Desktop\\∫Ω∞‡—”ŒÛ‘§≤‚ µ—È\\logs\\udata\\20240320-114934')
+2024-03-20 11:49:36: udata Dataset Load Finished.
+2024-03-20 11:49:37: transformer(
+  (emb1): Linear(in_features=70, out_features=128, bias=True)
+  (layernorm): LayerNorm((128,), eps=1e-05, elementwise_affine=True)
+  (emb2): Linear(in_features=70, out_features=128, bias=True)
+  (STEmbedding): STEmbedding(
+    (FC_se): FC(
+      (convs): ModuleList(
+        (0-1): 2 x conv2d_(
+          (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+          (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (FC_te): FC(
+      (convs): ModuleList(
+        (0): conv2d_(
+          (conv): Conv2d(1, 128, kernel_size=(1, 1), stride=(1, 1))
+          (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+        (1): conv2d_(
+          (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+          (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (SE_norm): LayerNorm((128,), eps=1e-05, elementwise_affine=True)
+    (TE_norm): LayerNorm((128,), eps=1e-05, elementwise_affine=True)
+  )
+  (STAttBlock_1): ModuleList(
+    (0): STAttBlock(
+      (spatialAttention): spatialAttention(
+        (FC_q): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_k): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_v): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+      )
+      (cheb_conv): ChebConv(
+        (Theta): ParameterList(
+            (0): Parameter containing: [torch.float32 of size 128x128 (cuda:0)]
+            (1): Parameter containing: [torch.float32 of size 128x128 (cuda:0)]
+            (2): Parameter containing: [torch.float32 of size 128x128 (cuda:0)]
+        )
+      )
+      (temporalAttention): temporalAttention(
+        (FC_q): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_k): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_v): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+      )
+      (gatedFusion): gatedFusion(
+        (FC_xs): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_xt): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_h): FC(
+          (convs): ModuleList(
+            (0-1): 2 x conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+      )
+    )
+  )
+  (STAttBlock_2): ModuleList(
+    (0): STAttBlock(
+      (spatialAttention): spatialAttention(
+        (FC_q): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_k): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_v): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+      )
+      (cheb_conv): ChebConv(
+        (Theta): ParameterList(
+            (0): Parameter containing: [torch.float32 of size 128x128 (cuda:0)]
+            (1): Parameter containing: [torch.float32 of size 128x128 (cuda:0)]
+            (2): Parameter containing: [torch.float32 of size 128x128 (cuda:0)]
+        )
+      )
+      (temporalAttention): temporalAttention(
+        (FC_q): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_k): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_v): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+      )
+      (gatedFusion): gatedFusion(
+        (FC_xs): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_xt): FC(
+          (convs): ModuleList(
+            (0): conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+        (FC_h): FC(
+          (convs): ModuleList(
+            (0-1): 2 x conv2d_(
+              (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+              (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            )
+          )
+        )
+      )
+    )
+  )
+  (transformAttention): transformAttention(
+    (FC_q): FC(
+      (convs): ModuleList(
+        (0): conv2d_(
+          (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+          (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (FC_k): FC(
+      (convs): ModuleList(
+        (0): conv2d_(
+          (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+          (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (FC_v): FC(
+      (convs): ModuleList(
+        (0): conv2d_(
+          (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+          (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+    (FC): FC(
+      (convs): ModuleList(
+        (0): conv2d_(
+          (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+          (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+    )
+  )
+  (FC_1): FC(
+    (convs): ModuleList(
+      (0): conv2d_(
+        (conv): Conv2d(3, 128, kernel_size=(1, 1), stride=(1, 1))
+        (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (1): conv2d_(
+        (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+        (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+  )
+  (FC_2): FC(
+    (convs): ModuleList(
+      (0): conv2d_(
+        (conv): Conv2d(128, 128, kernel_size=(1, 1), stride=(1, 1))
+        (batch_norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (1): conv2d_(
+        (conv): Conv2d(128, 2, kernel_size=(1, 1), stride=(1, 1))
+        (batch_norm): BatchNorm2d(2, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+  )
+)
+2024-03-20 11:49:40: Batch: 0,  Train Loss: 225.2296905517578
+2024-03-20 11:50:15: Batch: 100,  Train Loss: 109.10485076904297
+2024-03-20 11:50:50: Batch: 200,  Train Loss: 95.10417175292969
+2024-03-20 11:51:25: Batch: 300,  Train Loss: 84.6447982788086
+2024-03-20 11:52:01: Batch: 400,  Train Loss: 77.19529724121094
+2024-03-20 11:52:36: Batch: 500,  Train Loss: 72.64104461669922
+2024-03-20 11:53:11: Batch: 600,  Train Loss: 73.61563110351562
+2024-03-20 11:53:47: Batch: 700,  Train Loss: 70.44462585449219
+2024-03-20 11:54:22: Batch: 800,  Train Loss: 68.85374450683594
+2024-03-20 11:54:45: Epoch: 0, Train Loss: 84.78353271130342
+2024-03-20 11:54:45: Batch: 0,  Valid Loss: 51.67111587524414
+2024-03-20 11:54:57: Batch: 100,  Valid Loss: 61.01614761352539
+2024-03-20 11:55:08: Batch: 200,  Valid Loss: 61.83072280883789
+2024-03-20 11:55:13: Epoch: 0, Valid Loss: 65.72526190445008
+2024-03-20 11:55:13: Batch: 0,  Train Loss: 68.11956024169922
+2024-03-20 11:55:49: Batch: 100,  Train Loss: 68.41537475585938
+2024-03-20 11:56:24: Batch: 200,  Train Loss: 63.64898681640625
+2024-03-20 11:56:59: Batch: 300,  Train Loss: 67.2491455078125
+2024-03-20 11:57:34: Batch: 400,  Train Loss: 69.33934020996094
+2024-03-20 11:58:09: Batch: 500,  Train Loss: 65.10482025146484
+2024-03-20 11:58:44: Batch: 600,  Train Loss: 66.64628601074219
+2024-03-20 11:59:20: Batch: 700,  Train Loss: 65.61561584472656
+2024-03-20 11:59:55: Batch: 800,  Train Loss: 66.8785629272461
+2024-03-20 12:00:16: Epoch: 1, Train Loss: 67.30709821608116
+2024-03-20 12:00:17: Batch: 0,  Valid Loss: 51.95513153076172
+2024-03-20 12:00:28: Batch: 100,  Valid Loss: 64.24678802490234
+2024-03-20 12:00:39: Batch: 200,  Valid Loss: 61.5948600769043
+2024-03-20 12:00:44: Epoch: 1, Valid Loss: 65.92032003981865
+2024-03-20 12:00:45: Batch: 0,  Train Loss: 68.16172790527344
+2024-03-20 12:01:20: Batch: 100,  Train Loss: 65.44188690185547
+2024-03-20 12:01:55: Batch: 200,  Train Loss: 64.74602508544922
+2024-03-20 12:02:30: Batch: 300,  Train Loss: 66.02093505859375
+2024-03-20 12:03:05: Batch: 400,  Train Loss: 66.62578582763672
+2024-03-20 12:03:41: Batch: 500,  Train Loss: 69.73914337158203
+2024-03-20 12:04:16: Batch: 600,  Train Loss: 64.29680633544922
+2024-03-20 12:04:51: Batch: 700,  Train Loss: 66.76323699951172
+2024-03-20 12:05:26: Batch: 800,  Train Loss: 65.24407958984375
+2024-03-20 12:05:48: Epoch: 2, Train Loss: 66.10698191029843
+2024-03-20 12:05:48: Batch: 0,  Valid Loss: 50.608707427978516
+2024-03-20 12:05:59: Batch: 100,  Valid Loss: 61.75428009033203
+2024-03-20 12:06:11: Batch: 200,  Valid Loss: 59.724342346191406
+2024-03-20 12:06:16: Epoch: 2, Valid Loss: 64.24887986897457
+2024-03-20 12:06:16: Batch: 0,  Train Loss: 65.11637878417969
+2024-03-20 12:06:51: Batch: 100,  Train Loss: 64.85746002197266
+2024-03-20 12:07:26: Batch: 200,  Train Loss: 62.93787384033203
+2024-03-20 12:08:01: Batch: 300,  Train Loss: 66.84811401367188
+2024-03-20 12:08:37: Batch: 400,  Train Loss: 66.21038818359375
+2024-03-20 12:09:12: Batch: 500,  Train Loss: 66.13902282714844
+2024-03-20 12:09:47: Batch: 600,  Train Loss: 66.19242858886719
+2024-03-20 12:10:22: Batch: 700,  Train Loss: 64.17301177978516
+2024-03-20 12:10:57: Batch: 800,  Train Loss: 64.94068145751953
+2024-03-20 12:11:19: Epoch: 3, Train Loss: 65.34361776896253
+2024-03-20 12:11:19: Batch: 0,  Valid Loss: 51.640384674072266
+2024-03-20 12:11:30: Batch: 100,  Valid Loss: 60.39617156982422
+2024-03-20 12:11:42: Batch: 200,  Valid Loss: 60.086090087890625
+2024-03-20 12:11:47: Epoch: 3, Valid Loss: 64.36413455299038
+2024-03-20 12:11:47: Batch: 0,  Train Loss: 64.96736907958984
+2024-03-20 12:12:22: Batch: 100,  Train Loss: 62.13490676879883
+2024-03-20 12:12:57: Batch: 200,  Train Loss: 66.73554992675781
+2024-03-20 12:13:33: Batch: 300,  Train Loss: 65.07534790039062
+2024-03-20 12:14:08: Batch: 400,  Train Loss: 65.05409240722656
+2024-03-20 12:14:43: Batch: 500,  Train Loss: 65.25869750976562
+2024-03-20 12:15:18: Batch: 600,  Train Loss: 65.75723266601562
+2024-03-20 12:15:53: Batch: 700,  Train Loss: 67.12438201904297
+2024-03-20 12:16:28: Batch: 800,  Train Loss: 62.62087631225586
+2024-03-20 12:16:50: Epoch: 4, Train Loss: 64.73005446591122
+2024-03-20 12:16:50: Batch: 0,  Valid Loss: 52.06864929199219
+2024-03-20 12:17:01: Batch: 100,  Valid Loss: 59.291812896728516
+2024-03-20 12:17:13: Batch: 200,  Valid Loss: 60.29535675048828
+2024-03-20 12:17:18: Epoch: 4, Valid Loss: 63.511100676378256
+2024-03-20 12:17:18: Batch: 0,  Train Loss: 62.739925384521484
+2024-03-20 12:17:53: Batch: 100,  Train Loss: 64.80778503417969
+2024-03-20 12:18:28: Batch: 200,  Train Loss: 66.07171630859375
+2024-03-20 12:19:04: Batch: 300,  Train Loss: 66.15650177001953
+2024-03-20 12:19:39: Batch: 400,  Train Loss: 63.63645553588867
+2024-03-20 12:20:14: Batch: 500,  Train Loss: 64.9165267944336
+2024-03-20 12:20:49: Batch: 600,  Train Loss: 67.63151550292969
+2024-03-20 12:21:24: Batch: 700,  Train Loss: 62.336883544921875
+2024-03-20 12:22:00: Batch: 800,  Train Loss: 67.77491760253906
+2024-03-20 12:22:21: Epoch: 5, Train Loss: 64.19799286030285
+2024-03-20 12:22:21: Batch: 0,  Valid Loss: 49.53093719482422
+2024-03-20 12:22:32: Batch: 100,  Valid Loss: 58.4781494140625
+2024-03-20 12:22:44: Batch: 200,  Valid Loss: 59.745277404785156
+2024-03-20 12:22:49: Epoch: 5, Valid Loss: 63.59187273651
+2024-03-20 12:22:49: Batch: 0,  Train Loss: 64.12145233154297
+2024-03-20 12:23:24: Batch: 100,  Train Loss: 63.38440704345703
+2024-03-20 12:24:00: Batch: 200,  Train Loss: 63.23585510253906
+2024-03-20 12:24:35: Batch: 300,  Train Loss: 65.10933685302734
+2024-03-20 12:25:10: Batch: 400,  Train Loss: 65.939453125
+2024-03-20 12:25:45: Batch: 500,  Train Loss: 63.58095169067383
+2024-03-20 12:26:20: Batch: 600,  Train Loss: 65.31761169433594
+2024-03-20 12:26:55: Batch: 700,  Train Loss: 64.12140655517578
+2024-03-20 12:27:31: Batch: 800,  Train Loss: 62.11994934082031
+2024-03-20 12:27:52: Epoch: 6, Train Loss: 63.6574032422838
+2024-03-20 12:27:52: Batch: 0,  Valid Loss: 49.97908401489258
+2024-03-20 12:28:03: Batch: 100,  Valid Loss: 59.38970184326172
+2024-03-20 12:28:15: Batch: 200,  Valid Loss: 59.84779739379883
+2024-03-20 12:28:20: Epoch: 6, Valid Loss: 64.33789532001202
+2024-03-20 12:28:20: Batch: 0,  Train Loss: 61.547096252441406
+2024-03-20 12:28:55: Batch: 100,  Train Loss: 64.85088348388672
+2024-03-20 12:29:31: Batch: 200,  Train Loss: 62.81022262573242
+2024-03-20 12:30:06: Batch: 300,  Train Loss: 65.73002624511719
+2024-03-20 12:30:41: Batch: 400,  Train Loss: 63.228424072265625
+2024-03-20 12:31:16: Batch: 500,  Train Loss: 61.16579818725586
+2024-03-20 12:31:51: Batch: 600,  Train Loss: 60.7143440246582
+2024-03-20 12:32:26: Batch: 700,  Train Loss: 63.39840316772461
+2024-03-20 12:33:02: Batch: 800,  Train Loss: 63.56930923461914
+2024-03-20 12:33:23: Epoch: 7, Train Loss: 63.12064482828304
+2024-03-20 12:33:23: Batch: 0,  Valid Loss: 51.02257537841797
+2024-03-20 12:33:35: Batch: 100,  Valid Loss: 59.75760269165039
+2024-03-20 12:33:46: Batch: 200,  Valid Loss: 59.9180793762207
+2024-03-20 12:33:51: Epoch: 7, Valid Loss: 64.05631543364119
+2024-03-20 12:33:52: Batch: 0,  Train Loss: 65.5579833984375
+2024-03-20 12:34:27: Batch: 100,  Train Loss: 60.73170471191406
+2024-03-20 12:35:02: Batch: 200,  Train Loss: 60.92522048950195
+2024-03-20 12:35:37: Batch: 300,  Train Loss: 60.605472564697266
+2024-03-20 12:36:13: Batch: 400,  Train Loss: 60.187015533447266
+2024-03-20 12:36:48: Batch: 500,  Train Loss: 60.209205627441406
+2024-03-20 12:37:23: Batch: 600,  Train Loss: 60.53858184814453
+2024-03-20 12:37:58: Batch: 700,  Train Loss: 62.59409713745117
+2024-03-20 12:38:33: Batch: 800,  Train Loss: 61.38777542114258
+2024-03-20 12:38:55: Epoch: 8, Train Loss: 61.60032623273314
+2024-03-20 12:38:55: Batch: 0,  Valid Loss: 50.30506134033203
+2024-03-20 12:39:06: Batch: 100,  Valid Loss: 59.43549346923828
+2024-03-20 12:39:18: Batch: 200,  Valid Loss: 59.913455963134766
+2024-03-20 12:39:23: Epoch: 8, Valid Loss: 64.18565598769709
+2024-03-20 12:39:23: Batch: 0,  Train Loss: 60.42223358154297
+2024-03-20 12:39:59: Batch: 100,  Train Loss: 61.4726676940918
+2024-03-20 12:40:36: **************Current best model saved to C:\Users\17301\Desktop\∫Ω∞‡—”ŒÛ‘§≤‚ µ—È\logs\udata\20240320-114934\best_model.pth

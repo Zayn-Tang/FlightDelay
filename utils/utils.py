@@ -103,6 +103,21 @@ class HuberLoss(torch.nn.Module):
         loss = torch.where(residual < delta, 0.5 * residual ** 2, delta * (residual - 0.5 * delta))
         return loss.mean()
 
+from scipy.sparse.linalg import eigs
+def scaled_Laplacian(W):
+    assert W.shape[0] == W.shape[1]
+    D = np.diag(np.sum(W, axis=1))
+    L = D - W
+    lambda_max = eigs(L, k=1, which='LR')[0].real
+    return (2 * L) / lambda_max - np.identity(W.shape[0])
+
+def cheb_polynomial(L_tilde, order):
+    N = L_tilde.shape[0]
+    cheb_polynomials = [np.identity(N), L_tilde.copy()]
+    for i in range(2, order):
+        cheb_polynomials.append(2 * L_tilde * cheb_polynomials[i - 1] - cheb_polynomials[i - 2])
+    return cheb_polynomials
+
 
 class Trainer:
     def __init__(self, args, device):
@@ -124,7 +139,7 @@ class Trainer:
 
         self.load_data()
 
-        self.model = transformer(args).to(device)
+        self.model = transformer(args, self.cheb_polynomials).to(device)
         self.loss_func = torch.nn.MSELoss()
         self.optim = torch.optim.Adam(self.model.parameters(), lr=args.lr_init, weight_decay=1e-3)
         self.sched = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optim, factor=0.1, patience=2)
@@ -149,6 +164,9 @@ class Trainer:
             
             od = np.load("dataset/cdata/od_mx.npy")
             adj = np.load("dataset/cdata/dist_mx.npy")
+            L_tilde = scaled_Laplacian(od)
+            self.cheb_polynomials = [torch.from_numpy(i).type(torch.FloatTensor).to(self.device) for i in cheb_polynomial(L_tilde, self.args.cheb_order)]
+
             self.od = torch.tensor(od, device=self.device, dtype=torch.float32)
             self.adj = torch.tensor(adj, device=self.device, dtype=torch.float32)
 
@@ -181,6 +199,9 @@ class Trainer:
             
             od = np.load("dataset/udata/od_pair.npy")
             adj = np.load("dataset/udata/adj_mx.npy")
+            L_tilde = scaled_Laplacian(od)
+            self.cheb_polynomials = [torch.from_numpy(i).type(torch.FloatTensor).to(self.device) for i in cheb_polynomial(L_tilde, self.args.cheb_order)]
+
             self.od = torch.tensor(od, device=self.device, dtype=torch.float32)
             self.adj = torch.tensor(adj, device=self.device, dtype=torch.float32)
 
