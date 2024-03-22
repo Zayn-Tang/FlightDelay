@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from utils.utils import Trainer
+from utils.utils_aug import Trainer
 import argparse
 import yaml
 
