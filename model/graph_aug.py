@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F 
 import torch.nn.init as init
 from utils.aug import sim_global, aug_topology, aug_traffic, aug_topology_
-
+from utils.metrics import masked_mae_loss, masked_rmse_loss
 
 class STEncoder(nn.Module):
     def __init__(self, Kt, Ks, blocks, input_length, num_nodes, droprate=0.1):
@@ -87,8 +87,8 @@ class STEncoder(nn.Module):
 
     def _cal_laplacian(self, graph):
         I = torch.eye(graph.size(0), device=graph.device, dtype=graph.dtype)
-        # graph = graph + I # add self-loop to prevent zero in D
-        D = torch.diag(torch.sum(graph, dim=-1) ** (-0.5))  # 检查点：
+        D = torch.diag(torch.sum(graph, dim=-1) ** (-0.5))
+        # 增加自连接特征
         L = I - torch.mm(torch.mm(D, graph), D)
         return L
 
@@ -98,9 +98,9 @@ class Align(nn.Module):
         self.c_in = c_in
         self.c_out = c_out
         if c_in > c_out:
-            self.conv1x1 = nn.Conv2d(c_in, c_out, 1)  # filter=(1,1), similar to fc
+            self.conv1x1 = nn.Conv2d(c_in, c_out, 1)
 
-    def forward(self, x):  # x: (n,c,l,v)
+    def forward(self, x):
         if self.c_in > self.c_out:
             return self.conv1x1(x)
         if self.c_in < self.c_out:
@@ -138,7 +138,7 @@ class SpatioConvLayer(nn.Module):
 
     def reset_parameters(self):
         init.kaiming_uniform_(self.theta, a=math.sqrt(5))
-        fan_in, _ = init._calculate_fan_in_and_fan_out(self.theta) # 用来得到线性层的输入和输出
+        fan_in, _ = init._calculate_fan_in_and_fan_out(self.theta)
         bound = 1 / math.sqrt(fan_in) # 根据输入的维度进行 uniform 初始化
         init.uniform_(self.b, -bound, bound)
 
@@ -264,14 +264,13 @@ class TemporalHeteroModel(nn.Module):
         if device == 'cuda':
             self.lbl = self.lbl.cuda()
         
-        self.n = batch_size
-
     def forward(self, z1, z2):
+        batch = z1.shape[0]
         h = (z1 * self.W1 + z2 * self.W2).squeeze(1) # nlvc->nvc
         s = self.read(h) # average representation of Graph. s: summary of h, nc
 
         # select another region in batch
-        idx = torch.randperm(self.n) # 重新排序
+        idx = torch.randperm(batch) # 重新排序
         shuf_h = h[idx]
 
         logits = self.disc(s, h, shuf_h)
@@ -327,23 +326,22 @@ class MLP(nn.Module):
         return x
 
 
-class STSSL(nn.Module):
+class Model_Aug(nn.Module):
     def __init__(self, args):
-        super(STSSL, self).__init__()
-        # spatial temporal encoder
-        self.encoder = STEncoder(Kt=3, Ks=3, blocks=[[2, int(args.d_model//2), args.d_model], [args.d_model, int(args.d_model//2), args.d_model]], 
-                        input_length=args.hist_num, num_nodes=args.num_nodes, droprate=args.dropout)
+        super(Model_Aug, self).__init__()
+        self.encoder = STEncoder(Kt=3, Ks=3, blocks=[[3, int(args.d_model//2), args.d_model], [args.d_model, int(args.d_model//2), args.d_model]], 
+                        input_length=args.num_hist, num_nodes=args.num_nodes, droprate=args.dropout)
 
-        # temporal heterogenrity modeling branch
         self.mlp = MLP(args.d_model, args.d_output)
         self.thm = TemporalHeteroModel(args.d_model, args.batch_size, args.num_nodes, args.device)
-        # spatial heterogenrity modeling branch
+
         self.shm = SpatialHeteroModel(args.d_model, args.nmb_prototype, args.batch_size, args.shm_temp)
-        self.mae = masked_mae_loss(mask_value=5.0)
+        self.mae = masked_mae_loss(mask_value=0)
+        self.rmse = masked_rmse_loss(mask_value=0)
         self.args = args
     
     def forward(self, view1, graph):
-        repr1 = self.encoder(view1, graph) # view1: n,l,v,c; graph: v,v 
+        repr1 = self.encoder(view1, graph)
 
         s_sim_mx = self.fetch_spatial_sim()  # 结点来做拓扑的相似性
         graph2 = aug_topology_(s_sim_mx, graph, percent=self.args.aug_drop_percent*2)
@@ -351,7 +349,7 @@ class STSSL(nn.Module):
         t_sim_mx = self.fetch_temporal_sim()  # 时间用来做交通的相似性
         view2 = aug_traffic(t_sim_mx, view1, percent=self.args.aug_drop_percent)
         
-        repr2 = self.encoder(view2, graph2.to(view1.device))
+        repr2 = self.encoder(view2, graph2)
         return repr1, repr2
 
     def fetch_spatial_sim(self):
@@ -364,8 +362,8 @@ class STSSL(nn.Module):
         return self.mlp(z1)
 
     def loss(self, z1, z2, y_true, scaler):
-        l1 = self.pred_loss(z1, z2, y_true, scaler)
-        sep_loss = [l1.item()]
+        mae, rmse = self.pred_loss(z1, z2, y_true, scaler)
+        sep_loss = [mae.item(), rmse.item()]
         
         l2 = self.temporal_loss(z1, z2)
         sep_loss.append(l2.item())
@@ -373,18 +371,19 @@ class STSSL(nn.Module):
         l3 = self.spatial_loss(z1, z2)
         sep_loss.append(l3.item())
 
-        loss = l1 + l2 + l3
+        loss = mae + rmse + l2 + l3
         return loss, sep_loss
 
     def pred_loss(self, z1, z2, y_true, scaler):
         y_pred = scaler.inverse_transform(self.predict(z1, z2))  # 只用在 z1 进行预测
         y_true = scaler.inverse_transform(y_true)
  
-        y_pred = y_pred.squeeze(1)
-        loss = self.args.yita * self.mae(y_pred[..., 0], y_true[..., 0]) + \
+        mae = self.args.yita * self.mae(y_pred[..., 0], y_true[..., 0]) + \
                 (1 - self.args.yita) * self.mae(y_pred[..., 1], y_true[..., 1])
-        return loss
-    
+        rmse = self.args.yita * self.rmse(y_pred[..., 0], y_true[..., 0]) + \
+                (1 - self.args.yita) * self.rmse(y_pred[..., 1], y_true[..., 1])
+        return mae, rmse
+
     def temporal_loss(self, z1, z2):
         return self.thm(z1, z2)
 

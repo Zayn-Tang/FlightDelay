@@ -49,7 +49,7 @@ def mape_np(pred, true, mask_value=None):
         pred = pred[mask]
     return np.mean(np.absolute(np.divide((true - pred), true)))
 
-def test_metrics(pred, true, mask1=5, mask2=5):
+def test_metrics(pred, true, mask1=0, mask2=0):
     # mask1 filter the very small value, mask2 filter the value lower than a defined threshold
     assert type(pred) == type(true)
     if type(pred) == np.ndarray:
@@ -57,7 +57,7 @@ def test_metrics(pred, true, mask1=5, mask2=5):
         mape = mape_np(pred, true, mask2)
     elif type(pred) == torch.Tensor:
         mae  = mae_torch(pred, true, mask1).item()
-        mape = mape_torch(pred, true, mask2).item()
+        mape = rmse_torch(pred, true, mask2).item()
     else:
         raise TypeError
     return mae, mape

@@ -17,7 +17,7 @@ def seed_init(init_seed):
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config_filename', default='configs/transformer.yaml', 
+    parser.add_argument('--config_filename', default='configs/aug.yaml', 
                     type=str, help='the configuration to use')
     args = parser.parse_args()
     

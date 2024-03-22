@@ -6,7 +6,8 @@ from datetime import datetime
 from utils.logger import get_logger
 import os
 from model.transformer import transformer
-from utils.metrics import mae_torch, rmse_torch
+from model.graph_aug import Model_Aug
+from utils.metrics import test_metrics
 
 def get_log_dir(config):
     current_time = datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -139,12 +140,10 @@ class Trainer:
 
         self.load_data()
 
-        self.model = transformer(args, self.cheb_polynomials).to(device)
+        self.model = Model_Aug(args).to(device)
         self.loss_func = torch.nn.MSELoss()
         self.optim = torch.optim.Adam(self.model.parameters(), lr=args.lr_init, weight_decay=1e-3)
         self.sched = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optim, factor=0.1, patience=2)
-
-        print(self.model)
         self.logger.info(self.model)
 
         if self.args.load_model and self.args.best_path != "None" or self.args.running_mode=="test":
@@ -164,8 +163,6 @@ class Trainer:
             
             od = np.load("dataset/cdata/od_mx.npy")
             adj = np.load("dataset/cdata/dist_mx.npy")
-            L_tilde = scaled_Laplacian(od)
-            self.cheb_polynomials = [torch.from_numpy(i).type(torch.FloatTensor).to(self.device) for i in cheb_polynomial(L_tilde, self.args.cheb_order)]
 
             self.od = torch.tensor(od, device=self.device, dtype=torch.float32)
             self.adj = torch.tensor(adj, device=self.device, dtype=torch.float32)
@@ -181,17 +178,6 @@ class Trainer:
             delay[np.isnan(delay)] = 0
             self.delay = delay
 
-            time_step = np.arange(self.time_slot).reshape(-1, 1)
-
-            train_dataset = Stg1Dataset(self.args, delay[:train_num], time_step[:train_num])
-            val_dataset = Stg1Dataset(self.args, delay[train_num:train_num+val_num], time_step[train_num:train_num+val_num])
-            test_dataset = Stg1Dataset(self.args, delay[train_num+val_num:], time_step[train_num+val_num:])
-
-            self.train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=self.args.batch_size, shuffle=True, drop_last=True)
-            self.val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=self.args.batch_size, shuffle=False, drop_last=False)
-            self.test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=self.args.batch_size, shuffle=False, drop_last=False)
-
-
         if self.args.dataset=="udata":
             delay = np.load("dataset/udata/udelay.npy")
             self.args.num_nodes = delay.shape[0]
@@ -199,8 +185,6 @@ class Trainer:
             
             od = np.load("dataset/udata/od_pair.npy")
             adj = np.load("dataset/udata/adj_mx.npy")
-            L_tilde = scaled_Laplacian(od)
-            self.cheb_polynomials = [torch.from_numpy(i).type(torch.FloatTensor).to(self.device) for i in cheb_polynomial(L_tilde, self.args.cheb_order)]
 
             self.od = torch.tensor(od, device=self.device, dtype=torch.float32)
             self.adj = torch.tensor(adj, device=self.device, dtype=torch.float32)
@@ -216,15 +200,17 @@ class Trainer:
             delay[np.isnan(delay)] = 0
             self.delay = delay
 
-            time_step = np.arange(self.time_slot).reshape(-1, 1)
+        time_step = np.arange(self.time_slot).reshape(-1, 1)
 
-            train_dataset = Stg1Dataset(self.args, delay[:train_num], time_step[:train_num])
-            val_dataset = Stg1Dataset(self.args, delay[train_num:train_num+val_num], time_step[train_num:train_num+val_num])
-            test_dataset = Stg1Dataset(self.args, delay[train_num+val_num:], time_step[train_num+val_num:])
+        # self.od = self.od / torch.sum(self.od, dim=-1).unsqueeze(-1)
 
-            self.train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=self.args.batch_size, shuffle=True, drop_last=True)
-            self.val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=self.args.batch_size, shuffle=False, drop_last=False)
-            self.test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=self.args.batch_size, shuffle=False, drop_last=False)
+        train_dataset = Stg1Dataset(self.args, delay[:train_num], time_step[:train_num])
+        val_dataset = Stg1Dataset(self.args, delay[train_num:train_num+val_num], time_step[train_num:train_num+val_num])
+        test_dataset = Stg1Dataset(self.args, delay[train_num+val_num:], time_step[train_num+val_num:])
+
+        self.train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=self.args.batch_size, shuffle=True, drop_last=True)
+        self.val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=self.args.batch_size, shuffle=False, drop_last=True)
+        self.test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=self.args.batch_size, shuffle=False, drop_last=True)
 
         self.logger.info(f"{self.args.dataset} Dataset Load Finished.")
 
@@ -233,67 +219,65 @@ class Trainer:
         self.model.train()
         total_loss = []
 
-        for idx, (X, TE, Y) in enumerate(self.train_loader):
+        total_sep_loss = np.zeros(4) 
+        for idx, (X, _, Y) in enumerate(self.train_loader):
             X = X.to(self.device)
-            TE = TE.to(self.device)
             Y = Y.to(self.device)
 
             X = torch.concat([self.scaler.transform(X[..., :2]), X[..., -1:]], dim=-1)
 
             self.optim.zero_grad()
-            pred = self.model(X, [self.od, self.adj], TE)
-            pred = self.scaler.inverse_transform(pred)
+            repr1, repr2 = self.model(X, self.od)
+            loss, sep_loss = self.model.loss(repr1, repr2, Y[...,:-1], self.scaler)
 
             if self.args.grad_norm:
                 torch.nn.utils.clip_grad_norm_(
                     self.model.parameters(), 
                     self.args.max_grad_norm)
-                
-            loss = self.loss_func(pred, Y[..., :2])
+
             # loss.backward(retrain_graph=True)
             loss.backward()
             self.optim.step()
             total_loss.append(loss.item())
+            total_sep_loss += sep_loss
 
-            if idx%100==0:
-                self.logger.info(f"Batch: {idx},  Train Loss: {loss.item()}")
-        return np.mean(total_loss)
+            # if idx%100==0:
+            #     self.logger.info(f"Batch: {idx}, Train Loss: {loss.item()}, MAE: {sep_loss[0]}, RMSE: {sep_loss[1]}, STH: {sep_loss[2]+ sep_loss[3]}")
+        total_sep_loss /= len(self.train_loader)
+        return np.mean(total_loss),  total_sep_loss
 
 
     def val_epoch(self):
         self.model.eval()
         total_loss = []
-
-        for idx, (X, TE, Y) in enumerate(self.val_loader):
+        total_sep_loss = np.zeros(4)
+        for idx, (X, _, Y) in enumerate(self.val_loader):
             X = X.to(self.device)
-            TE = TE.to(self.device)
             Y = Y.to(self.device)
-
             X = torch.concat([self.scaler.transform(X[..., :2]), X[..., -1:]], dim=-1)
 
             self.optim.zero_grad()
             with torch.no_grad():
-                pred = self.model(X, [self.od, self.adj], TE)
-
-            pred = self.scaler.inverse_transform(pred)
-            loss = self.loss_func(pred, Y[..., :2])
+                repr1, repr2 = self.model(X, self.od)
+                loss, sep_loss = self.model.loss(repr1, repr2, Y[...,:-1], self.scaler)
             total_loss.append(loss.item())
-
-            if idx%100==0:
-                self.logger.info(f"Batch: {idx},  Valid Loss: {loss.item()}")
-        return np.mean(total_loss)
+            total_sep_loss += sep_loss
+            
+            # if idx%100==0:
+            #     self.logger.info(f"Batch: {idx}, Valid Loss: {loss.item()}, MAE: {sep_loss[0]}, RMSE: {sep_loss[1]}, STH: {sep_loss[2]+ sep_loss[3]}")
+        total_sep_loss /= len(self.val_loader)
+        return np.mean(total_loss), total_sep_loss
 
     def train(self):
         best_loss = float('inf')
         not_improved_count = 0
 
         for es in range(self.epochs):
-            train_loss = self.train_epoch()
-            # print("Epoch:", es, ", Training loss",  train_loss)
-            self.logger.info(f"Epoch: {es}, Train Loss: {train_loss}")
+            train_loss, sep_loss = self.train_epoch()
+            self.logger.info(f"****Epoch: {es}, Train Loss: {train_loss}, MAE: {sep_loss[0]}, RMSE: {sep_loss[1]}, STH: {sep_loss[2]+ sep_loss[3]}")
 
-            val_loss = self.val_epoch()
-            self.logger.info(f"Epoch: {es}, Valid Loss: {val_loss}")
+            val_loss, sep_loss = self.val_epoch()
+            self.logger.info(f"****Epoch: {es}, Valid Loss: {val_loss}, MAE: {sep_loss[0]}, RMSE: {sep_loss[1]}, STH: {sep_loss[2]+ sep_loss[3]}")
 
             if val_loss < best_loss:
                 best_loss = val_loss
@@ -316,28 +300,38 @@ class Trainer:
         torch.save(save_dict, self.best_path)
 
 
-
     def test(self):
         self.model.eval()
-        mae_list = []
-        rmse_list = []
-        r2_list = []
+
+        y_true = []
+        y_pred = []
         for idx, (X, TE, Y) in enumerate(self.test_loader):
             X = X.to(self.device)
             TE = TE.to(self.device)
             Y = Y.to(self.device)
             X = torch.concat([self.scaler.transform(X[..., :2]), X[..., -1:]], dim=-1)
 
-            self.optim.zero_grad()
             with torch.no_grad():
-                pred = self.model(X, [self.od, self.adj], TE)
-            pred = self.scaler.inverse_transform(pred)
-            # mae , rmse, r2 = test_error(pred, Y[...,:-1])
-            mae = mae_torch(pred, Y[..., :-1])
-            rmse = rmse_torch(pred, Y[..., :-1])
-            mae_list.append(mae.item())
-            rmse_list.append(rmse.item())
-            # r2_list.append(r2.item())
+                repr1, repr2 = self.model(X, self.od)             
+                pred_output = self.model.predict(repr1, repr2)
+                y_true.append(Y[...,:-1])
+                y_pred.append(pred_output)
+
+        y_true = self.scaler.inverse_transform(torch.cat(y_true, dim=0))
+        y_pred = self.scaler.inverse_transform(torch.cat(y_pred, dim=0))
+
+        mae_list = []
+        rmse_list = []
+        # inflow
+        mae, rmse = test_metrics(y_pred[..., 0], y_true[..., 0])
+        self.logger.info("INFLOW, MAE: {:.2f}, RMSE: {:.4f}".format(mae, rmse))
+        mae_list.append(mae); rmse_list.append(rmse)
+
+        # outflow 
+        mae, rmse = test_metrics(y_pred[..., 1], y_true[..., 1])
+        self.logger.info("OUTFLOW, MAE: {:.2f}, RMSE: {:.4f}".format(mae, rmse))
+        mae_list.append(mae); rmse_list.append(rmse)
 
         self.logger.info(f"Test Error: MAE {np.mean(mae_list)},  RMSE {np.mean(rmse_list)}")
-        self.logger.info('**************Current best model saved to {}'.format(self.best_path))
+
+

@@ -86,6 +86,8 @@ def aug_topology_(sim_mx, input_graph, percent=0.1):
     :param input_graph: tensor, adjacency matrix without self-loop, [v,v]
     :return aug_graph: tensor, augmented adjacency matrix on cuda, [v,v]
     """
+    device = input_graph.device
+
     input_graph = input_graph.cpu().numpy()
     index_list = input_graph.nonzero() # list of edges [row_idx, col_idx]
 
@@ -93,8 +95,8 @@ def aug_topology_(sim_mx, input_graph, percent=0.1):
     aug_num = int(edge_num * percent) 
     
     graph = input_graph[index_list]
-    dist_graph = np.random.normal(graph.mean().item(), graph.std().item(), size=aug_num).astype(np.int32)
-    dist_graph[dist_graph<0]=0
+    dist_graph = np.random.normal(graph.mean().item()/100, graph.std().item()/100, size=aug_num)
+    # dist_graph[dist_graph<0]=0
 
     edge_mask = input_graph>0
     # sim_mx = sim_mx.to(input_graph.device)
@@ -107,10 +109,9 @@ def aug_topology_(sim_mx, input_graph, percent=0.1):
     index_list = np.stack(index_list, axis=1)
     drop_index = index_list[drop_list]
     
-    # 检查：不要改成0了，改成同分布采样
-    input_graph[drop_index[:, 0], drop_index[:, 1]] = dist_graph
+    input_graph[drop_index[:, 0], drop_index[:, 1]] += dist_graph
+    input_graph = torch.from_numpy(input_graph).to(device)
 
-    input_graph = torch.from_numpy(input_graph)
     return input_graph
 
 

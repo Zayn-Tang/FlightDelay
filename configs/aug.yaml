@@ -5,24 +5,31 @@ debug: False
 running_mode: train #  train test finetune
 
 epochs: 100
-lr_init: 0.0005
+lr_init: 0.001
 batch_size: 64
-
-num_nodes : 50
 
 ## train
 load_train_model: False
 train_best_path: None
-use_pretrain: True
+load_model: False
 best_path: None   # for testing dataset.
 early_stop_patience: 5
-hidden_dim: 32
-num_heads: 8
-
+num_hist: 12
+num_pred: 1
+d_model: 32
+d_output: 2
+dropout: 0.1
+shm_temp: 0.6
+nmb_prototype: 6
+aug_drop_percent: 0.1
+yita: 0.5
+grad_norm: True
+max_grad_norm: 7
 
 ## dataset
 dataset: cdata
 datapath: cdata.npy
+num_nodes : 50
 scalar_type: Standard
 train_ratio:  0.7
 valid_ratio: 0.2
